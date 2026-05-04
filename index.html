@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Risk Management Tool — PA</title>
+<style>
+#rmtool, #rmtool * { box-sizing: border-box !important; }
+#rmtool {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif !important;
+  font-size: 15px !important; color: #1a1a18 !important; background: #ffffff !important;
+  border: 0.5px solid rgba(0,0,0,.10) !important; border-radius: 12px !important;
+  padding: 24px !important; max-width: 800px !important; margin: 2rem auto !important; line-height: 1.5 !important;
+}
+#rmtool .rm-tabs {
+  display: flex !important; border-bottom: 0.5px solid rgba(0,0,0,.10) !important;
+  margin-bottom: 0 !important; overflow-x: auto !important; scrollbar-width: none !important;
+}
+#rmtool .rm-tabs::-webkit-scrollbar { display: none !important; }
+#rmtool .rm-tab {
+  padding: 10px 20px !important; font-size: 15px !important; font-weight: 500 !important;
+  color: #888 !important; cursor: pointer !important; border: none !important;
+  border-bottom: 2px solid transparent !important; white-space: nowrap !important;
+  flex-shrink: 0 !important; background: none !important; font-family: inherit !important;
+  outline: none !important; transition: all .15s !important;
+}
+#rmtool .rm-tab.on { color: #1a1a18 !important; border-bottom-color: #1a1a18 !important; }
+#rmtool .rm-tab:hover:not(.on) { background: #f7f7f5 !important; }
+#rmtool .rm-view { display: none !important; }
+#rmtool .rm-view.on { display: block !important; }
+#rmtool .rm-tab-header {
+  padding: 20px 0 16px !important; border-bottom: 0.5px solid rgba(0,0,0,.08) !important;
+  margin-bottom: 20px !important;
+}
+#rmtool .rm-tab-title {
+  font-size: 20px !important; font-weight: 600 !important; color: #1a1a18 !important;
+  margin-bottom: 3px !important; display: block !important;
+}
+#rmtool .rm-tab-sub {
+  font-size: 13px !important; font-weight: 500 !important; color: #888 !important;
+  display: block !important; margin-bottom: 8px !important; font-style: italic !important;
+}
+#rmtool .rm-tab-desc {
+  font-size: 13px !important; color: #555 !important; line-height: 1.6 !important;
+  display: block !important; max-width: 640px !important;
+}
+#rmtool .rm-sl {
+  font-size: 12px !important; font-weight: 700 !important; color: #333 !important;
+  letter-spacing: .05em !important; text-transform: uppercase !important;
+  margin-bottom: 10px !important; margin-top: 4px !important; display: block !important;
+}
+#rmtool .rm-grid2 { display: grid !important; grid-template-columns: repeat(2, minmax(0,1fr)) !important; gap: 8px !important; }
+#rmtool .rm-grid2 > :last-child:nth-child(odd) { grid-column: 1 / -1 !important; }
+/* Tile espandibili (tab 1-2-3) */
+#rmtool .rm-tile {
+  background: #ffffff !important; border: 0.5px solid rgba(0,0,0,.10) !important;
+  border-radius: 12px !important; padding: 14px 16px !important;
+  cursor: pointer !important; transition: all .15s !important;
+}
+#rmtool .rm-tile:hover, #rmtool .rm-tile.open {
+  border-color: rgba(0,0,0,.20) !important; background: #f7f7f5 !important;
+}
+#rmtool .rm-tile-hdr { display: flex !important; align-items: flex-start !important; gap: 10px !important; margin-bottom: 5px !important; }
+#rmtool .rm-dot { width: 10px !important; height: 10px !important; border-radius: 50% !important; flex-shrink: 0 !important; margin-top: 3px !important; display: inline-block !important; }
+#rmtool .rm-tile-title { font-size: 14px !important; font-weight: 500 !important; color: #1a1a18 !important; line-height: 1.3 !important; margin: 0 !important; }
+#rmtool .rm-tile-sub { font-size: 12px !important; color: #666 !important; line-height: 1.4 !important; margin-bottom: 8px !important; display: block !important; }
+#rmtool .rm-badge { display: inline-block !important; font-size: 11px !important; font-weight: 500 !important; padding: 2px 8px !important; border-radius: 20px !important; }
+#rmtool .rm-tile-body { display: none !important; margin-top: 10px !important; padding-top: 10px !important; border-top: 0.5px solid rgba(0,0,0,.10) !important; }
+#rmtool .rm-tile.open .rm-tile-body { display: block !important; }
+#rmtool .rm-rr { padding: 10px 0 !important; border-bottom: 0.5px solid rgba(0,0,0,.08) !important; }
+#rmtool .rm-rr:last-child { border-bottom: none !important; }
+#rmtool .rm-rr-top { display: flex !important; align-items: flex-start !important; gap: 7px !important; margin-bottom: 5px !important; }
+#rmtool .rm-rdot { width: 5px !important; height: 5px !important; border-radius: 50% !important; flex-shrink: 0 !important; margin-top: 5px !important; display: inline-block !important; }
+#rmtool .rm-rname { font-size: 13px !important; font-weight: 500 !important; color: #1a1a18 !important; flex: 1 !important; line-height: 1.4 !important; margin: 0 !important; }
+#rmtool .rm-rlv { font-size: 11px !important; font-weight: 500 !important; padding: 2px 7px !important; border-radius: 20px !important; flex-shrink: 0 !important; display: inline-block !important; }
+#rmtool .rm-rsimple { font-size: 12px !important; color: #555 !important; line-height: 1.55 !important; margin: 4px 0 3px !important; padding-left: 12px !important; border-left: 2px solid #ddd !important; display: block !important; }
+#rmtool .rm-rpa { font-size: 12px !important; color: #666 !important; line-height: 1.5 !important; padding-left: 12px !important; display: block !important; margin-top: 3px !important; }
+#rmtool .rm-rpa strong { color: #1a1a18 !important; font-weight: 500 !important; }
+#rmtool .rm-ar { display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 5px 0 !important; border-bottom: 0.5px solid rgba(0,0,0,.08) !important; font-size: 12px !important; }
+#rmtool .rm-ar:last-child { border-bottom: none !important; }
+#rmtool .rm-lev-block { border-radius: 8px !important; overflow: hidden !important; border: 0.5px solid rgba(0,0,0,.10) !important; margin-top: 8px !important; }
+#rmtool .rm-lev-hdr { display: flex !important; align-items: center !important; gap: 8px !important; padding: 7px 10px !important; }
+#rmtool .rm-lp { font-size: 11px !important; font-weight: 600 !important; padding: 2px 9px !important; border-radius: 20px !important; flex-shrink: 0 !important; display: inline-block !important; }
+#rmtool .rm-lex { font-size: 12px !important; color: #666 !important; font-style: italic !important; flex: 1 !important; line-height: 1.3 !important; margin: 0 !important; }
+#rmtool .rm-lev-body { padding: 7px 10px 9px !important; border-top: 0.5px solid rgba(0,0,0,.08) !important; }
+#rmtool .rm-mi { display: flex !important; gap: 6px !important; padding: 2px 0 !important; font-size: 12px !important; color: #1a1a18 !important; line-height: 1.5 !important; }
+#rmtool .rm-md { width: 4px !important; height: 4px !important; border-radius: 50% !important; flex-shrink: 0 !important; margin-top: 6px !important; display: inline-block !important; }
+/* Tile di selezione (tab 4) — radio style */
+#rmtool .rm-opt {
+  background: #ffffff !important; border: 1.5px solid rgba(0,0,0,.12) !important;
+  border-radius: 10px !important; padding: 11px 13px !important;
+  cursor: pointer !important; transition: all .15s !important;
+  display: flex !important; align-items: flex-start !important; gap: 10px !important;
+}
+#rmtool .rm-opt:hover { border-color: rgba(0,0,0,.30) !important; background: #f9f9f7 !important; }
+#rmtool .rm-opt.sel {
+  border-color: #185FA5 !important; background: #EAF3FB !important;
+  box-shadow: 0 0 0 1px #185FA5 !important;
+}
+#rmtool .rm-radio {
+  width: 16px !important; height: 16px !important; border-radius: 50% !important;
+  border: 1.5px solid #ccc !important; flex-shrink: 0 !important; margin-top: 1px !important;
+  background: #fff !important; position: relative !important; transition: all .15s !important;
+  pointer-events: none !important; display: inline-block !important;
+}
+#rmtool .rm-opt.sel .rm-radio {
+  border-color: #185FA5 !important; background: #185FA5 !important;
+}
+#rmtool .rm-opt.sel .rm-radio::after {
+  content: '' !important; position: absolute !important;
+  width: 6px !important; height: 6px !important; border-radius: 50% !important;
+  background: white !important; top: 3px !important; left: 3px !important;
+}
+#rmtool .rm-opt-text { flex: 1 !important; pointer-events: none !important; }
+#rmtool .rm-ot { font-size: 13px !important; font-weight: 500 !important; color: #1a1a18 !important; margin-bottom: 2px !important; display: block !important; }
+#rmtool .rm-opt.sel .rm-ot { color: #185FA5 !important; }
+#rmtool .rm-os { font-size: 12px !important; color: #666 !important; line-height: 1.4 !important; display: block !important; }
+/* RAF checkbox tiles */
+#rmtool .rm-raf-tile {
+  background: #ffffff !important; border: 1.5px solid rgba(0,0,0,.12) !important;
+  border-radius: 10px !important; padding: 11px 13px !important;
+  cursor: pointer !important; transition: all .15s !important;
+  display: flex !important; align-items: flex-start !important; gap: 10px !important;
+}
+#rmtool .rm-raf-tile:hover { border-color: rgba(0,0,0,.28) !important; }
+#rmtool .rm-raf-tile.on {
+  border-color: #C0392B !important; background: rgba(192,57,43,.05) !important;
+  box-shadow: 0 0 0 1px #C0392B !important;
+}
+#rmtool .rm-rcb {
+  width: 16px !important; height: 16px !important; border-radius: 4px !important;
+  border: 1.5px solid #ccc !important; flex-shrink: 0 !important; margin-top: 1px !important;
+  background: #fff !important; position: relative !important; transition: all .15s !important;
+  display: inline-block !important; pointer-events: none !important;
+}
+#rmtool .rm-raf-tile.on .rm-rcb { background: #C0392B !important; border-color: #922B21 !important; }
+#rmtool .rm-raf-tile.on .rm-rcb::after {
+  content: '' !important; position: absolute !important; left: 3px !important; top: 1px !important;
+  width: 5px !important; height: 8px !important; border: 2px solid white !important;
+  border-top: none !important; border-left: none !important; transform: rotate(45deg) !important;
+}
+#rmtool .rm-rtl { font-size: 13px !important; font-weight: 500 !important; color: #1a1a18 !important; margin-bottom: 2px !important; display: block !important; pointer-events: none !important; }
+#rmtool .rm-raf-tile.on .rm-rtl { color: #922B21 !important; }
+#rmtool .rm-rsub { font-size: 12px !important; color: #666 !important; line-height: 1.4 !important; display: block !important; pointer-events: none !important; }
+#rmtool .rm-raf-tile.on .rm-rsub { color: #C0392B !important; }
+#rmtool .rm-raf-inner { flex: 1 !important; pointer-events: none !important; }
+/* Meter */
+#rmtool .rm-mtr { height: 8px !important; border-radius: 4px !important; background: #eee !important; overflow: hidden !important; margin: 6px 0 4px !important; display: block !important; }
+#rmtool .rm-mbar { height: 100% !important; border-radius: 4px !important; transition: width .4s, background .4s !important; display: block !important; }
+#rmtool .rm-pill { display: inline-flex !important; font-size: 13px !important; font-weight: 500 !important; padding: 4px 14px !important; border-radius: 20px !important; }
+#rmtool .rm-meter-wrap { background: #f7f7f5 !important; border-radius: 10px !important; padding: 14px 16px !important; margin-bottom: 16px !important; }
+/* Assessment */
+#rmtool .rm-ac { background: #fff !important; border: 0.5px solid rgba(0,0,0,.10) !important; border-radius: 12px !important; margin-bottom: 8px !important; overflow: hidden !important; }
+#rmtool .rm-ach { display: flex !important; justify-content: space-between !important; align-items: flex-start !important; padding: 11px 14px !important; gap: 10px !important; }
+#rmtool .rm-acb { padding: 0 14px 12px !important; border-top: 0.5px solid rgba(0,0,0,.08) !important; }
+#rmtool .rm-acex { background: #f7f7f5 !important; border-radius: 8px !important; padding: 8px 11px !important; margin: 8px 0 6px !important; font-size: 12px !important; color: #666 !important; line-height: 1.5 !important; display: block !important; }
+#rmtool .rm-ki { display: flex !important; gap: 5px !important; padding: 2px 0 !important; font-size: 12px !important; color: #1a1a18 !important; line-height: 1.5 !important; }
+#rmtool .rm-kd { width: 4px !important; height: 4px !important; border-radius: 50% !important; flex-shrink: 0 !important; margin-top: 5px !important; display: inline-block !important; }
+#rmtool .rm-sbox { border: 0.5px solid rgba(0,0,0,.10) !important; border-radius: 12px !important; overflow: hidden !important; margin-bottom: 14px !important; }
+#rmtool .rm-shdr { padding: 10px 15px !important; font-size: 14px !important; font-weight: 500 !important; display: block !important; }
+#rmtool .rm-srow { display: flex !important; justify-content: space-between !important; align-items: center !important; padding: 7px 15px !important; border-top: 0.5px solid rgba(0,0,0,.08) !important; font-size: 13px !important; }
+#rmtool .rm-slbl { color: #666 !important; }
+#rmtool .rm-info { background: #f7f7f5 !important; border-radius: 8px !important; padding: 12px 14px !important; font-size: 13px !important; color: #666 !important; line-height: 1.7 !important; margin-top: 14px !important; display: block !important; }
+#rmtool .rm-alert { background: rgba(192,57,43,.07) !important; border: 0.5px solid rgba(192,57,43,.35) !important; border-radius: 8px !important; padding: 10px 14px !important; margin-bottom: 14px !important; font-size: 13px !important; color: #7B241C !important; display: block !important; }
+#rmtool .rm-btn { font-size: 13px !important; padding: 9px 20px !important; border-radius: 8px !important; border: 1px solid rgba(0,0,0,.18) !important; background: transparent !important; color: #1a1a18 !important; cursor: pointer !important; font-family: inherit !important; transition: all .15s !important; outline: none !important; }
+#rmtool .rm-btn:hover { background: #f7f7f5 !important; }
+#rmtool .rm-btn.p { background: #1a1a18 !important; color: #ffffff !important; border-color: #1a1a18 !important; }
+#rmtool .rm-btn.p:hover { opacity: .85 !important; }
+#rmtool .rm-3col { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 8px !important; margin-bottom: 16px !important; }
+#rmtool .rm-mb16 { margin-bottom: 16px !important; }
+#rmtool .rm-flex-gap { display: flex !important; gap: 8px !important; flex-wrap: wrap !important; margin-top: 14px !important; }
+#rmtool .rm-sep { height: 0.5px !important; background: rgba(0,0,0,.08) !important; margin: 20px 0 !important; display: block !important; }
+</style>
+</head>
+<body>
+<div id="rmtool">
+  <div class="rm-tabs">
+    <button class="rm-tab on" data-tab="0">1 · Mappa dei rischi</button>
+    <button class="rm-tab" data-tab="1">2 · Amplificatori</button>
+    <button class="rm-tab" data-tab="2">3 · Mitigazioni</button>
+    <button class="rm-tab" data-tab="3">4 · Calcolatore</button>
+  </div>
+
+  <div class="rm-view on" id="v0">
+    <div class="rm-tab-header">
+      <span class="rm-tab-title">Mappa dei rischi</span>
+      <span class="rm-tab-sub">Le dimensioni del rischio AI</span>
+      <span class="rm-tab-desc">Le 9 categorie di rischio rilevanti per la pubblica amministrazione nell'adozione di sistemi AI. Clicca su ciascuna per esplorare i fattori specifici e il loro livello di severità.</span>
+    </div>
+    <div class="rm-grid2" id="map0"></div>
+  </div>
+
+  <div class="rm-view" id="v1">
+    <div class="rm-tab-header">
+      <span class="rm-tab-title">Amplificatori</span>
+      <span class="rm-tab-sub">I fattori che aumentano l'esposizione</span>
+      <span class="rm-tab-desc">10 caratteristiche di progetto che, se presenti, incrementano il livello di rischio base. La scala del sistema, l'assenza di supervisione umana o la dipendenza tecnologica da un unico fornitore possono trasformare un rischio contenuto in uno critico.</span>
+    </div>
+    <div class="rm-grid2" id="map1"></div>
+    <div class="rm-info"><strong style="color:#1a1a18">Formula:</strong> Rischio finale = Rischio base × Amplificatori<br>0–1 RAF attivi → invariato &nbsp;·&nbsp; 2–3 RAF → +1 livello &nbsp;·&nbsp; 4+ RAF → +2 livelli</div>
+  </div>
+
+  <div class="rm-view" id="v2">
+    <div class="rm-tab-header">
+      <span class="rm-tab-title">Mitigazioni</span>
+      <span class="rm-tab-sub">Le misure di presidio per ogni livello</span>
+      <span class="rm-tab-desc">Per ciascuna delle 9 categorie, le misure operative da adottare in funzione del livello di rischio — da Basso a Critico. Una guida di riferimento indipendente dal profilo specifico del progetto.</span>
+    </div>
+    <div class="rm-grid2" id="map2"></div>
+  </div>
+
+  <div class="rm-view" id="v3">
+    <div class="rm-tab-header">
+      <span class="rm-tab-title">Calcolatore</span>
+      <span class="rm-tab-sub">Il profilo di rischio del tuo progetto</span>
+      <span class="rm-tab-desc">Configura il tipo di sistema, la natura delle decisioni, il livello di autonomia e i fattori di amplificazione rilevanti. Il tool restituisce un assessment personalizzato con lo scenario atteso e le misure di mitigazione per ciascuna categoria.</span>
+    </div>
+    <div id="cfg">
+      <span class="rm-sl">Tipo di sistema AI</span>
+      <div class="rm-grid2 rm-mb16" id="tg">
+        <div class="rm-opt" data-key="t" data-val="0"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Supporto operativo interno</span><span class="rm-os">Copiloti, automazione documentale, ricerca semantica</span></div></div>
+        <div class="rm-opt" data-key="t" data-val="1"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Supporto decisionale</span><span class="rm-os">Scoring, raccomandazioni, prioritizzazione pratiche</span></div></div>
+        <div class="rm-opt" data-key="t" data-val="2"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Decisione automatizzata</span><span class="rm-os">Assegnazioni, esclusioni, controlli automatici</span></div></div>
+        <div class="rm-opt" data-key="t" data-val="3"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Interazione con cittadini</span><span class="rm-os">Chatbot pubblici, sportelli digitali, assistenti</span></div></div>
+        <div class="rm-opt" data-key="t" data-val="4" style="grid-column:1/-1"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Sistema critico / infrastrutturale</span><span class="rm-os">Sanità, sicurezza pubblica, infrastrutture critiche</span></div></div>
+      </div>
+      <span class="rm-sl">Tipo di decisione</span>
+      <div class="rm-grid2 rm-mb16" id="dg">
+        <div class="rm-opt" data-key="d" data-val="0"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Nessuna decisione</span><span class="rm-os">Solo suggerimenti, nessun impatto diretto</span></div></div>
+        <div class="rm-opt" data-key="d" data-val="1"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Decisioni reversibili</span><span class="rm-os">Errori correggibili senza conseguenze durature</span></div></div>
+        <div class="rm-opt" data-key="d" data-val="2"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Impatto economico</span><span class="rm-os">Risorse, spese, contributi</span></div></div>
+        <div class="rm-opt" data-key="d" data-val="3"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Diritti individuali</span><span class="rm-os">Accesso a servizi, benefici, procedimenti</span></div></div>
+        <div class="rm-opt" data-key="d" data-val="4" style="grid-column:1/-1"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Salute / sicurezza / giustizia</span><span class="rm-os">Vita o libertà delle persone</span></div></div>
+      </div>
+      <span class="rm-sl">Livello di autonomia</span>
+      <div class="rm-3col" id="ag">
+        <div class="rm-opt" data-key="a" data-val="0"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Human-in-the-loop</span><span class="rm-os">L'umano approva ogni singolo output</span></div></div>
+        <div class="rm-opt" data-key="a" data-val="1"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Human-on-the-loop</span><span class="rm-os">L'umano monitora e può intervenire</span></div></div>
+        <div class="rm-opt" data-key="a" data-val="2"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Fully autonomous</span><span class="rm-os">Nessun intervento umano routinario</span></div></div>
+      </div>
+      <div class="rm-sep"></div>
+      <span class="rm-sl">Fattori di amplificazione — <span id="rc">0</span>/10 attivi (selezione multipla)</span>
+      <div class="rm-grid2 rm-mb16" id="rg"></div>
+      <div class="rm-meter-wrap">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:13px;color:#666">Rischio base → finale</span>
+          <div id="pb" class="rm-pill" style="background:#EAF3DE;color:#27500A">—</div>
+        </div>
+        <div class="rm-mtr"><div class="rm-mbar" id="mb" style="width:0%"></div></div>
+        <span style="font-size:12px;color:#999;margin-top:3px;display:block" id="pt">Seleziona le opzioni sopra per vedere il calcolo</span>
+      </div>
+      <div id="val-msg" style="display:none;background:rgba(192,57,43,.08);border:0.5px solid rgba(192,57,43,.35);border-radius:8px;padding:9px 13px;margin-bottom:10px;font-size:13px;color:#7B241C">Seleziona un'opzione per ciascuna delle tre sezioni prima di generare l'assessment.</div>
+      <button class="rm-btn p" id="btn-ass" style="width:100%;padding:11px;font-size:14px">Genera assessment →</button>
+    </div>
+    <div id="res" style="display:none">
+      <div id="sa"></div>
+      <span class="rm-sl" style="display:block;margin-top:4px">Assessment per le 9 categorie</span>
+      <div id="aa"></div>
+      <div class="rm-flex-gap">
+        <button class="rm-btn" id="btn-back">← Modifica configurazione</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var LV=['Basso','Medio','Alto','Critico'];
+var LC={Basso:['#EAF3DE','#27500A'],Medio:['#FAEEDA','#633806'],Alto:['#FCEBEB','#791F1F'],Critico:['#501313','#FCEBEB']};
+var LB={Basso:'#639922',Medio:'#BA7517',Alto:'#E24B4A',Critico:'#A32D2D'};
+var LP={Basso:18,Medio:44,Alto:70,Critico:95};
+var LRISK={Critico:['#791F1F','#FCEBEB'],Alto:['#A32D2D','#FCEBEB'],Medio:['#854F0B','#FAEEDA'],Basso:['#3B6D11','#EAF3DE']};
+var TN=['Supporto operativo interno','Supporto decisionale','Decisione automatizzata','Interazione con cittadini','Sistema critico'];
+var DN=['Nessuna decisione','Decisioni reversibili','Impatto economico','Diritti individuali','Salute/sicurezza/giustizia'];
+var AN=['Human-in-the-loop','Human-on-the-loop','Fully autonomous'];
+var CATS=[
+  {n:'1',label:'Strategici',dot:'#7F77DD',bg:'#EEEDFE',tc:'#3C3489',badge:'Lungo periodo',sub:'Lock-in, scelte tecnologiche, disallineamento obiettivi',risks:[{t:'Scelta tecnologica sbagliata',l:'Alto',s:'Si adotta una soluzione che sembra funzionare in fase di gara ma che non regge all\'uso reale, o che diventa obsoleta prima di aver ammortizzato l\'investimento.',pa:'Cambiare sistema a progetto avviato costa molto di più che non averlo adottato. Nel frattempo il servizio pubblico ha lavorato con uno strumento inadatto.'},{t:'Lock-in con il fornitore',l:'Critico',s:'Una volta adottato il sistema, diventa così difficile e costoso uscirne che l\'ente si trova in pratica obbligato a rinnovare, anche se il fornitore peggiora il servizio o aumenta i prezzi.',pa:'La PA perde potere contrattuale e autonomia su uno strumento che nel tempo diventa infrastruttura critica.'},{t:'Dipendenza da modelli non trasparenti',l:'Alto',s:'Il sistema produce risultati ma nessuno — nemmeno il fornitore — sa spiegare perché ha prodotto quel risultato in quel momento.',pa:'Senza trasparenza non è possibile verificare se il sistema funziona correttamente, né motivare giuridicamente le decisioni che ne derivano.'},{t:'Disallineamento con gli obiettivi pubblici',l:'Medio',s:'Il sistema ottimizza quello che è facile misurare — tempi di risposta, volumi processati — ma non quello che serve davvero ai cittadini.',pa:'Si rischia di automatizzare un processo mal progettato, ottenendo risultati più veloci ma non più utili o equi.'}],ex:{Basso:'Tool AI interno non adottato dagli utenti',Medio:'Dipendenza da vendor SaaS, migrazione difficile',Alto:'Lock-in su LLM esterno unico per servizi core',Critico:'Infrastruttura AI dipendente da un unico provider straniero'},mit:{Basso:['Verificare l\'esistenza di alternative di mercato prima dell\'affidamento','Clausola minima di exit nel contratto'],Medio:['Clausola anti lock-in e portabilità dati in formato aperto','API documentate in formato standard (OpenAPI 3.0)','Preavviso minimo 12 mesi in caso di cessazione del servizio'],Alto:['Escrow del codice/modello presso un terzo fiduciario','Vendor Dependency Index monitorato semestralmente','Piano di migrazione documentato con tempi e costi'],Critico:['Tutte le misure Alto','Valutazione multi-vendor obbligatoria prima dell\'affidamento','Coinvolgimento ACN/AgID nella valutazione strategica']}},
+  {n:'2',label:'Operativi',dot:'#378ADD',bg:'#E6F1FB',tc:'#0C447C',badge:'Continuità',sub:'Affidabilità, integrazione sistemi legacy, scalabilità, model drift',risks:[{t:'Malfunzionamento e model drift silenzioso',l:'Alto',s:'Il model drift è il degrado graduale delle prestazioni: il mondo reale cambia, ma il modello rimane fermo al momento in cui è stato addestrato. Le risposte diventano meno accurate, spesso senza che nessun allarme scatti.',pa:'A differenza di un software che smette di funzionare in modo evidente, un modello in drift continua a produrre output — semplicemente sempre meno affidabili, finché qualcuno non se ne accorge.'},{t:'Output errati che passano inosservati',l:'Alto',s:'Il sistema produce risultati sbagliati, ma chi li riceve li accetta senza verificare — perché \"di solito funziona\" e non c\'è una procedura di controllo strutturata.',pa:'Senza campionamento e audit sistematici degli output, gli errori si accumulano silenziosamente — spesso scoperti solo attraverso un reclamo o un caso mediatico.'},{t:'Mancata integrazione con i sistemi esistenti',l:'Alto',s:'Il nuovo sistema AI non riesce a dialogare con le banche dati, i gestionali o i protocolli già in uso nell\'ente, richiedendo integrazioni costose non preventivate.',pa:'La PA italiana ha spesso sistemi datati con interfacce proprietarie. I costi di integrazione non previsti sono una delle cause più frequenti di fallimento dei progetti AI.'},{t:'Scalabilità insufficiente',l:'Medio',s:'Il sistema funziona bene durante i test o in fase pilota, ma non regge quando viene usato dal numero reale di utenti o elabora i volumi reali di dati.',pa:'I picchi di utilizzo — apertura di bandi, scadenze fiscali, emergenze — sono i momenti in cui un sistema pubblico non può permettersi di rallentare o bloccarsi.'}],ex:{Basso:'Output imprecisi occasionali in documenti interni',Medio:'Sistema incoerente che rallenta i processi',Alto:'Malfunzionamento che blocca un servizio pubblico',Critico:'Downtime su sistema critico (prenotazioni sanitarie)'},mit:{Basso:['SLA di disponibilità minimo (uptime ≥ 99%)','Piano di fallback manuale documentato'],Medio:['Monitoraggio del model drift con soglie di allerta automatiche','Rollback garantito alla versione precedente del modello'],Alto:['Monitoring continuo con alerting automatico in tempo reale','RTO (Recovery Time Objective) < 4 ore contrattualizzato','Test di carico su volumi reali prima del go-live'],Critico:['Tutte le misure Alto','Ridondanza infrastrutturale attiva','Business continuity plan certificato']}},
+  {n:'3',label:'Decisionali',dot:'#E24B4A',bg:'#FCEBEB',tc:'#791F1F',badge:'Core AI risk',sub:'Bias, discriminazione, allucinazioni, explainability',risks:[{t:'Bias algoritmico e discriminazione',l:'Critico',s:'Se i dati usati per addestrare il modello riflettono discriminazioni storiche, il sistema le impara e le ripete su scala automatica — su genere, età, area geografica, condizione economica.',pa:'A differenza di un funzionario umano che può essere formato o corretto, un modello AI applica il bias in modo uniforme e invisibile su tutti i casi che elabora.'},{t:'Errori sistematici su scala',l:'Critico',s:'Quando un sistema AI sbaglia, non sbaglia una volta — sbaglia nello stesso modo su tutti i casi simili, finché qualcuno non se ne accorge e interviene.',pa:'Un funzionario che sbaglia commette un errore individuale. Un sistema AI che sbaglia può produrre migliaia di decisioni errate prima che l\'errore venga rilevato.'},{t:'Allucinazioni nei modelli generativi',l:'Alto',s:'I modelli basati su linguaggio naturale possono generare informazioni false presentate con la stessa sicurezza di quelle vere. Non \"sanno\" di stare sbagliando.',pa:'Se un sistema AI produce un atto amministrativo contenente un\'informazione inventata, le conseguenze possono essere molto difficili da gestire — soprattutto se non rilevate prima della comunicazione ufficiale.'},{t:'Mancanza di spiegabilità (explainability)',l:'Critico',s:'Il sistema produce un risultato ma non è in grado di spiegare perché — quali dati ha considerato, con quale peso, e quali risultati alternativi avrebbe potuto produrre.',pa:'Ogni atto amministrativo deve essere motivato per legge. Un sistema che non sa spiegare le proprie conclusioni rende impossibile rispettare questo obbligo.'}],ex:{Basso:'Suggerimenti imprecisi facilmente riconoscibili',Medio:'Bias nei suggerimenti che influenzano decisioni umane',Alto:'Decisioni automatizzate discriminatorie su assegnazione benefici',Critico:'Scoring penale con bias strutturale su etnia o genere'},mit:{Basso:['Revisione umana obbligatoria su ogni output prima dell\'uso','Flag visivo per output a bassa confidenza'],Medio:['Explainability: i fattori principali dell\'output visibili a operatori non tecnici','Audit campionato mensile degli output (campione ≥ 5%)'],Alto:['Test di bias su gruppi protetti prima del go-live','Metriche di fairness contrattualizzate per gruppo demografico','Supervisione umana obbligatoria su ogni decisione rilevante'],Critico:['Tutte le misure Alto','Validazione indipendente da ente terzo certificato','Diritto di ricorso documentato e procedura attivata']}},
+  {n:'4',label:'Supervisione',dot:'#D85A30',bg:'#FAECE7',tc:'#712B13',badge:'Human oversight',sub:'Automation bias, controlli umani, formazione, audit trail',risks:[{t:'Automation bias — eccessiva fiducia nell\'AI',l:'Alto',s:'Gli operatori che lavorano ogni giorno con un sistema AI tendono ad accettarne le indicazioni senza esercitare giudizio critico — soprattutto quando il sistema è quasi sempre corretto. La supervisione diventa formale, non sostanziale.',pa:'Il valore della supervisione umana dipende dalla sua qualità, non dalla sua presenza formale. Un operatore che approva sistematicamente senza verificare non aggiunge nessuna protezione reale.'},{t:'Mancanza di controlli strutturati',l:'Alto',s:'La supervisione viene lasciata alla discrezionalità dei singoli — chi è più scrupoloso controlla, chi ha fretta no — senza procedure formali, responsabilità definite o tracciabilità delle verifiche.',pa:'In caso di errore è impossibile stabilire dove si è interrotta la catena di controllo e chi avrebbe dovuto intervenire.'},{t:'Formazione inadeguata degli operatori',l:'Medio',s:'Il personale non ha ricevuto una formazione adeguata su come interpretare gli output, riconoscere i segnali di anomalia o sapere quando ignorare una raccomandazione dell\'AI.',pa:'Un operatore non formato non è in grado di esercitare una supervisione reale — e può generare una falsa sensazione di controllo che in realtà non esiste.'},{t:'Assenza di audit trail',l:'Alto',s:'Il sistema non registra — o non conserva — la traccia di cosa ha elaborato, quale versione del modello era attiva, quali input ha ricevuto e quali output ha prodotto.',pa:'Senza un registro immutabile e verificabile, in caso di contestazione o ricorso è impossibile ricostruire cosa è successo, quando e perché.'}],ex:{Basso:'Operatori che verificano sistematicamente ogni output',Medio:'Operatori che iniziano a fidarsi troppo dell\'AI',Alto:'Assenza di supervisione su decisioni che impattano i cittadini',Critico:'Sistema fully autonomous su materie con impatto su diritti fondamentali'},mit:{Basso:['Linee guida d\'uso interne adottate e comunicate prima del go-live','Formazione base obbligatoria per tutti gli utenti'],Medio:['Workflow di supervisione formalizzato in procedura operativa scritta','Monitoraggio del tasso di adesione agli output AI (soglia allerta: > 85%)'],Alto:['Human-on-the-loop: ogni override deve essere registrato e motivato','Procedura di escalation formale per output contestati'],Critico:['Human-in-the-loop obbligatorio su ogni decisione critica','Doppia revisione umana indipendente su casi sensibili','Audit indipendente annuale della catena di supervisione']}},
+  {n:'5',label:'Legali / Compliance',dot:'#639922',bg:'#EAF3DE',tc:'#27500A',badge:'Normativo',sub:'GDPR, AI Act, responsabilità legale, uso improprio dati',risks:[{t:'Non conformità all\'AI Act',l:'Critico',s:'Il Regolamento europeo sull\'AI (in vigore dal 2024) impone obblighi precisi per i sistemi ad alto rischio usati nella PA: registrazione, valutazione di conformità, supervisione umana, trasparenza. Molti sistemi oggi sul mercato non li rispettano ancora.',pa:'Utilizzare un sistema non conforme espone l\'ente a sanzioni e blocchi operativi — oltre a rendere il sistema inutilizzabile nel momento in cui i controlli vengono applicati.'},{t:'Violazioni del GDPR',l:'Critico',s:'I sistemi AI che trattano dati personali devono rispettare obblighi precisi: valutazione d\'impatto (DPIA), nomina del fornitore come responsabile del trattamento, garanzie sulla localizzazione dei dati. Spesso questi passaggi vengono saltati.',pa:'Le sanzioni possono essere significative, ma il danno maggiore è la perdita di fiducia dei cittadini e la potenziale invalidazione degli atti prodotti con dati trattati in modo non conforme.'},{t:'Responsabilità legale non definita',l:'Alto',s:'In caso di danno causato da una decisione assistita dall\'AI, non è chiaro chi risponde: l\'ente, il fornitore, il system integrator, o l\'operatore che ha approvato l\'output.',pa:'In assenza di una ripartizione contrattuale esplicita, il rischio tende a ricadere sull\'ente pubblico.'},{t:'Uso improprio dei dati della PA',l:'Critico',s:'I dati inseriti nel sistema AI possono essere usati dal fornitore per migliorare i propri modelli, addestrare altri sistemi o essere condivisi con terze parti, spesso senza che l\'ente ne sia consapevole.',pa:'I dati della PA appartengono alla collettività. Il loro uso non autorizzato può costituire una violazione grave — e difficile da rilevare senza clausole contrattuali esplicite.'}],ex:{Basso:'Dati non sensibili, nessun impatto legale diretto',Medio:'Trattamento dati personali con zone grigie GDPR',Alto:'Violazione GDPR accertata o sistema non conforme AI Act',Critico:'Decisioni automatizzate su diritti senza possibilità di ricorso'},mit:{Basso:['DPA (art. 28 GDPR) firmato con il fornitore','Verifica che i dati elaborati non siano sensibili o particolari'],Medio:['DPIA avviata con il DPO se dati personali coinvolti','Divieto esplicito di uso dei dati PA per re-training nel contratto'],Alto:['Conformità AI Act dichiarata con numero di registrazione EU','Audit esterno annuale di conformità normativa'],Critico:['Tutte le misure Alto','Parere legale preventivo obbligatorio prima del go-live','Comunicazione al Garante Privacy']}},
+  {n:'6',label:'Reputazionali',dot:'#BA7517',bg:'#FAEEDA',tc:'#633806',badge:'Alta visibilità',sub:'Fiducia pubblica, media, percezione di ingiustizia',risks:[{t:'Errori ad alta visibilità pubblica',l:'Critico',s:'Un singolo caso in cui il sistema AI produce un risultato palesemente sbagliato — e questo diventa pubblico — può bloccare l\'intera iniziativa, indipendentemente da quante volte il sistema ha funzionato correttamente.',pa:'La fiducia nelle istituzioni pubbliche è fragile. Un incidente AI non viene percepito come un errore tecnico isolato, ma come un segnale di come l\'ente gestisce le decisioni che riguardano i cittadini.'},{t:'Decisioni percepite come ingiuste',l:'Alto',s:'Anche una decisione tecnicamente corretta può essere vissuta come ingiusta se il cittadino non capisce le ragioni, non sa che è stata prodotta da un sistema AI, o non ha modo di contestarla.',pa:'La legittimità delle decisioni pubbliche dipende non solo dalla correttezza ma dalla comprensibilità e dalla possibilità di ricorso. Un sistema opaco erode entrambe.'},{t:'Perdita di fiducia istituzionale',l:'Alto',s:'L\'effetto reputazionale di un incidente AI non si limita al progetto specifico — si estende all\'intera istituzione, percepita come incapace di gestire responsabilmente la tecnologia.',pa:'Ricostruire la fiducia istituzionale richiede molto più tempo di quanto ne sia bastato per perderla.'},{t:'Media backlash',l:'Medio',s:'L\'AI è un tema politicamente e mediaticamente sensibile. Un episodio negativo — anche di modesta entità — può diventare una notizia amplificata, soprattutto se coinvolge categorie vulnerabili o servizi essenziali.',pa:'La copertura mediatica negativa può portare alla sospensione di progetti validi per ragioni di opportunità politica.'}],ex:{Basso:'Errori minori non visibili esternamente',Medio:'Risposte errate a cittadini tramite chatbot pubblico',Alto:'Scandalo mediatico per decisioni AI percepite come ingiuste',Critico:'Crisi istituzionale per uso AI in materia giudiziaria o sanitaria'},mit:{Basso:['Nessun obbligo di comunicazione pubblica proattiva','Procedura interna di segnalazione anomalie'],Medio:['Disclosure: comunicare ai cittadini quando un servizio usa l\'AI','Procedura di gestione reclami con tempi di risposta definiti'],Alto:['Piano di comunicazione di crisi pre-approvato','Portavoce tecnico designato per incidenti AI'],Critico:['Sospensione preventiva del sistema in caso di incidente grave','Comunicazione proattiva ai cittadini potenzialmente coinvolti']}},
+  {n:'7',label:'Economici',dot:'#EF9F27',bg:'#FAEEDA',tc:'#854F0B',badge:'TCO reale',sub:'Costi nascosti, ROI, costi di remediation',risks:[{t:'Costi nascosti di API e scaling',l:'Alto',s:'Molti sistemi AI si pagano a consumo — per ogni chiamata, documento elaborato, utente attivo. In fase di gara questi costi sembrano contenuti, ma crescono rapidamente con il volume reale di utilizzo.',pa:'Il budget approvato si basa su stime spesso irrealistiche. Il costo effettivo a regime può essere multiplo di quello previsto, senza meccanismi contrattuali per contenerlo.'},{t:'ROI inferiore alle aspettative',l:'Medio',s:'I benefici del sistema AI si materializzano solo se i processi interni vengono adattati di conseguenza. Spesso questo lavoro viene sottovalutato o non fatto.',pa:'Un sistema AI inserito in un processo non ottimizzato produce risultati peggiori del previsto. Il confronto con le aspettative iniziali genera disillusione e resistenza interna.'},{t:'Costi di manutenzione non previsti',l:'Alto',s:'Un sistema AI non si installa e si dimentica. Richiede monitoraggio continuo, aggiornamenti periodici e competenze interne per gestirlo. Il TCO (Total Cost of Ownership) è quasi sempre più alto di quanto stimato inizialmente.',pa:'Senza una stima realistica, l\'ente si trova dopo il go-live con impegni di spesa non pianificati e difficili da eliminare.'},{t:'Costi di remediation per errori su scala',l:'Alto',s:'Quando un sistema AI produce errori su larga scala, il costo per identificare e correggere i casi già processati può essere molto superiore al risparmio ottenuto.',pa:'La remediation in ambito PA è particolarmente costosa perché coinvolge atti amministrativi, comunicazioni ufficiali e potenzialmente ricorsi.'}],ex:{Basso:'Costi API leggermente sopra le attese iniziali',Medio:'Aumento significativo dei costi di scaling non previsto',Alto:'Progetto AI con ROI negativo e costi di mantenimento elevati',Critico:'Remediation massiva per errori prodotti su larga scala'},mit:{Basso:['Stima del TCO realistica su 3 anni nel business case','Alert automatici sui consumi API mensili'],Medio:['Cap di spesa mensile contrattualizzato con il fornitore','Pricing predeterminato per volumi aggiuntivi oltre la soglia'],Alto:['TCO completo su 3 anni richiesto nel capitolato tecnico','Revisione economica annuale obbligatoria'],Critico:['Tutte le misure Alto','Fondo di remediation costituito in bilancio prima del go-live','Valutazione di copertura assicurativa per danni da AI']}},
+  {n:'8',label:'Sicurezza',dot:'#85B7EB',bg:'#E6F1FB',tc:'#185FA5',badge:'Cyber AI',sub:'Prompt injection, data leakage, model poisoning',risks:[{t:'Prompt injection',l:'Alto',s:'Nei sistemi basati su linguaggio naturale, un utente malintenzionato può inserire istruzioni nascoste all\'interno di un documento o di una richiesta, inducendo il sistema AI a comportarsi in modo diverso da quello previsto.',pa:'È un tipo di attacco specifico per i sistemi AI, che le misure di sicurezza informatica tradizionali non rilevano. Richiede contromisure dedicate.'},{t:'Data leakage dal contesto di sistema',l:'Critico',s:'I sistemi AI ricevono spesso istruzioni riservate nel \"contesto\" invisibile all\'utente. Con le giuste domande, queste informazioni — dati di configurazione, documenti riservati, regole operative — possono essere estratte da chiunque interagisca con il sistema.',pa:'Dati personali o istruzioni operative dell\'ente possono essere accessibili a qualsiasi utente, anche senza autorizzazione specifica.'},{t:'Model poisoning',l:'Alto',s:'Se un attaccante riesce a modificare i dati usati per addestrare o aggiornare il modello, può alterarne il comportamento in modo sistematico — facendolo produrre certi tipi di errori o favorire certi risultati.',pa:'È un attacco silenzioso e difficile da rilevare. Il sistema continua a funzionare apparentemente in modo normale, ma produce risultati alterati intenzionalmente.'},{t:'Accessi non autorizzati',l:'Medio',s:'Il sistema AI e i suoi log di utilizzo non hanno controlli adeguati su chi può accedere a cosa — permettendo a personale non autorizzato di consultare dati sensibili o vedere le interazioni di altri utenti.',pa:'I log di un sistema AI contengono spesso informazioni molto sensibili: le domande poste, i documenti elaborati, le decisioni prodotte. Senza controlli granulari diventano un rischio di privacy.'}],ex:{Basso:'Accesso non autorizzato a dati non sensibili',Medio:'Prompt injection che altera gli output del sistema',Alto:'Data leakage di informazioni riservate della PA',Critico:'Attacco coordinato al modello su infrastruttura critica nazionale'},mit:{Basso:['Autenticazione base (SSO o credenziali aziendali)','Verifica che nessun dato riservato sia nel contesto di sistema'],Medio:['Misure anti-prompt injection documentate e testate','Logging completo di tutti gli accessi e delle sessioni'],Alto:['Red-teaming AI-specific ogni 6 mesi con report condiviso','Data residency UE garantita e verificabile contrattualmente','Notifica di incidente entro 72 ore con procedura documentata'],Critico:['Tutte le misure Alto','Certificazione ACN obbligatoria','Penetration testing indipendente annuale specifico per AI']}},
+  {n:'9',label:'Esecuzione',dot:'#888780',bg:'#F1EFE8',tc:'#5F5E5A',badge:'Procurement',sub:'Vendor, ritardi, scope creep, dipendenza da consulenti',risks:[{t:'Vendor incapace o sovrastimato',l:'Alto',s:'Il fornitore presenta in fase di gara competenze e referenze che non corrispondono alla capacità effettiva di delivery — o ha esperienza in contesti privati molto diversi dalla complessità della PA.',pa:'Scoprirlo a progetto avviato significa dover gestire ritardi, rinegoziazioni e spesso il coinvolgimento di altri fornitori a costi non previsti.'},{t:'Ritardi di progetto',l:'Medio',s:'I tempi stimati non tengono conto delle specificità della PA — procedure di approvazione, vincoli normativi, tempi di integrazione con sistemi legacy. Il progetto slippa sistematicamente.',pa:'I ritardi hanno un effetto a cascata: slittano i benefici attesi e si crea pressione per tagliare le fasi di test e validazione — proprio quelle che riducono il rischio.'},{t:'Scope creep non governato',l:'Medio',s:'Il sistema AI inizia con un perimetro definito, ma nel tempo viene esteso a nuovi casi d\'uso, uffici e tipologie di dati — spesso senza una nuova valutazione del rischio.',pa:'Ogni estensione introduce nuovi rischi. Un sistema classificato a basso rischio nella configurazione iniziale può diventare ad alto rischio dopo poche espansioni non governate.'},{t:'Dipendenza da consulenti esterni',l:'Alto',s:'Le competenze per gestire, monitorare e far evolvere il sistema rimangono fuori dall\'ente. Senza knowledge transfer strutturato, ogni intervento richiede di ricorrere agli stessi soggetti a condizioni sempre meno favorevoli.',pa:'La dipendenza da consulenti è una forma di lock-in spesso più difficile da sciogliere di quella tecnologica.'}],ex:{Basso:'Piccoli ritardi nel progetto, facilmente recuperabili',Medio:'Vendor non pienamente competente nella fase di delivery',Alto:'Fallimento del progetto o impossibilità di delivery nei tempi',Critico:'Blocco di un servizio pubblico essenziale per mancato delivery'},mit:{Basso:['Milestone di progetto nel contratto','Referente tecnico interno designato prima del go-live'],Medio:['Piano di knowledge transfer obbligatorio con scadenze','Penali per ritardi significativi contrattualizzate'],Alto:['Clausola di exit per inadempimento grave con procedura documentata','Audit del fornitore prima dell\'affidamento (referenze verificate)'],Critico:['Tutte le misure Alto','Vendor qualificato AgID o equivalente','Piano di continuità operativa durante l\'eventuale cambio fornitore']}}
+];
+var RAFS=[
+  {l:'Diritti fondamentali',s:'Il sistema impatta su accesso a servizi essenziali, benefici sociali o diritti civili dei cittadini',a:['Legali / Compliance \u2191\u2191','Reputazionali \u2191\u2191','Decisionali \u2191']},
+  {l:'Assenza di supervisione umana',s:'Nessun meccanismo di human-in-the-loop, o controlli formali troppo deboli per essere efficaci',a:['Supervisione \u2191\u2191\u2191','Decisionali \u2191\u2191','Legali \u2191']},
+  {l:'Black box / bassa explainability',s:'Il modello non è interpretabile: impossibile spiegare perché ha prodotto un determinato output',a:['Legali / Compliance \u2191\u2191','Decisionali \u2191\u2191','Reputazionali \u2191']},
+  {l:'Dati sensibili o personali',s:'Il sistema elabora dati sanitari, finanziari, giudiziari o altre categorie particolari ai sensi del GDPR',a:['Sicurezza \u2191\u2191','Legali / Compliance \u2191\u2191','Reputazionali \u2191']},
+  {l:'Scala elevata',s:'Il sistema opera su larga popolazione o gestisce processi ad alto volume che coinvolgono molti cittadini',a:['Decisionali \u2191\u2191','Reputazionali \u2191\u2191','Operativi \u2191','Legali \u2191']},
+  {l:'Automazione completa',s:'Le decisioni vengono prese senza alcun intervento umano nel ciclo operativo',a:['Decisionali \u2191\u2191','Legali / Compliance \u2191\u2191','Supervisione \u2191\u2191']},
+  {l:'Modello generativo (LLM)',s:'Il sistema è basato su un modello di linguaggio naturale, con rischio di allucinazioni e output non deterministici',a:['Operativi \u2191','Decisionali \u2191','Reputazionali \u2191']},
+  {l:'Dipendenza da vendor esterno',s:'Il sistema si basa su API esterne o modelli proprietari che l\'ente non può controllare o sostituire facilmente',a:['Strategici \u2191\u2191','Sicurezza \u2191','Economici \u2191']},
+  {l:'Bassa maturità organizzativa',s:'L\'ente non ha una policy AI interna, ruoli definiti o personale formato per gestire sistemi AI',a:['Supervisione \u2191\u2191','Operativi \u2191','Esecuzione \u2191']},
+  {l:'Alta visibilità pubblica',s:'Il sistema interagisce direttamente con i cittadini o riguarda materie ad alta esposizione mediatica',a:['Reputazionali \u2191\u2191\u2191']}
+];
+var S={t:null,d:null,a:null,r:new Set()};
+function gB(){var t=S.t!==null?S.t:0,d=S.d!==null?S.d:0,a=S.a!==null?S.a:0;return Math.min(Math.max(t>3?3:t>2?2:t>1?1:0,d>3?3:d>2?2:d>0?Math.max(d-1,0):0,a>1?1:0),3);}
+function gF(){var n=S.r.size;return Math.min(gB()+(n<=1?0:n<=3?1:2),3);}
+function q(id){return document.getElementById(id);}
+function buildTile(c,mapKey){
+  var isRAF=!c.risks;
+  var dot=c.dot||'#E24B4A',bg=c.bg||'#FCEBEB',tc=c.tc||'#791F1F';
+  var title=(c.n?c.n+' \u00b7 ':'')+( c.label||c.l);
+  var sub=c.sub||c.s;
+  var badge=c.badge||(c.a.length+' categorie impattate');
+  var inner='';
+  if(!isRAF){
+    inner=c.risks.map(function(r){var ls=LRISK[r.l]||['#888','#eee'];return '<div class="rm-rr"><div class="rm-rr-top"><div class="rm-rdot" style="background:'+dot+'"></div><span class="rm-rname">'+r.t+'</span><span class="rm-rlv" style="background:'+ls[1]+';color:'+ls[0]+'">'+r.l+'</span></div><span class="rm-rsimple">'+r.s+'</span><span class="rm-rpa"><strong>Perch\u00e9 \u00e8 un problema nella PA:</strong> '+r.pa+'</span></div>';}).join('');
+  } else {
+    inner=c.a.map(function(a){var p=a.lastIndexOf(' ');return '<div class="rm-ar"><span style="color:#666">'+a.substring(0,p)+'</span><span style="color:#A32D2D;font-weight:500;font-size:11px">'+a.substring(p+1)+'</span></div>';}).join('');
+  }
+  if(c.mit){
+    inner+=LV.map(function(lv){var lc=LC[lv],dc=LB[lv],mits=c.mit[lv]||[];return '<div class="rm-lev-block"><div class="rm-lev-hdr" style="background:'+lc[0]+'44"><span class="rm-lp" style="background:'+lc[0]+';color:'+lc[1]+'">'+lv+'</span><span class="rm-lex">'+(c.ex[lv]||'')+'</span></div><div class="rm-lev-body">'+mits.map(function(m){return '<div class="rm-mi"><div class="rm-md" style="background:'+dc+'"></div><span>'+m+'</span></div>';}).join('')+'</div></div>';}).join('');
+  }
+  return '<div class="rm-tile" data-map="'+mapKey+'"><div class="rm-tile-hdr"><div class="rm-dot" style="background:'+dot+'"></div><div class="rm-tile-title">'+title+'</div></div><span class="rm-tile-sub">'+sub+'</span><span class="rm-badge" style="background:'+bg+';color:'+tc+'">'+badge+'</span><div class="rm-tile-body">'+inner+'</div></div>';
+}
+function bMap0(){q('map0').innerHTML=CATS.map(function(c){return buildTile(c,'c');}).join('');}
+function bMap1(){if(q('map1').innerHTML)return;q('map1').innerHTML=RAFS.map(function(r){return buildTile(r,'r');}).join('');}
+function bMap2(){if(q('map2').innerHTML)return;q('map2').innerHTML=CATS.map(function(c){return buildTile(c,'m');}).join('');}
+function bRS(){
+  q('rg').innerHTML=RAFS.map(function(r,i){return '<div class="rm-raf-tile'+(S.r.has(i)?' on':'')+'" data-raf="'+i+'"><div class="rm-rcb"></div><div class="rm-raf-inner"><span class="rm-rtl">'+r.l+'</span><span class="rm-rsub">'+r.s+'</span></div></div>';}).join('');
+}
+function uP(){
+  var b=gB(),f=gF(),ln=LV[f],lc=LC[ln],n=S.r.size,bump=n<=1?0:n<=3?1:2;
+  var pb=q('pb');pb.style.background=lc[0];pb.style.color=lc[1];pb.textContent=ln;
+  q('mb').style.width=LP[ln]+'%';q('mb').style.background=LB[ln];
+  q('pt').textContent=bump>0?('Base: '+LV[b]+' \u2192 +'+bump+' livello'+(bump>1?'i':'')+' per '+n+' RAF \u2192 '+ln):(n>0?'Base: '+LV[b]+' \u2014 '+n+' RAF attivo, non sufficiente per amplificare':'Base: '+LV[b]);
+}
+function showAss(){
+  if(S.t===null||S.d===null||S.a===null){
+    var msg=q('val-msg');
+    if(msg){
+      msg.style.setProperty('display','block','important');
+      setTimeout(function(){msg.style.setProperty('display','none','important');},3000);
+    }
+    return;
+  }
+  var f=gF(),b=gB(),ln=LV[f],lc=LC[ln],n=S.r.size,bump=n<=1?0:n<=3?1:2;
+  var ra=RAFS.filter(function(_,i){return S.r.has(i);});
+  q('sa').innerHTML='<div class="rm-sbox"><div class="rm-shdr" style="background:'+lc[0]+';color:'+lc[1]+'">Rischio finale: <strong>'+ln+'</strong>'+(bump>0?' \u2014 amplificato da '+n+' RAF':'')+'</div><div class="rm-srow"><span class="rm-slbl">Tipo sistema</span><span>'+(S.t!==null?TN[S.t]:'\u2014')+'</span></div><div class="rm-srow"><span class="rm-slbl">Tipo decisione</span><span>'+(S.d!==null?DN[S.d]:'\u2014')+'</span></div><div class="rm-srow"><span class="rm-slbl">Autonomia</span><span>'+(S.a!==null?AN[S.a]:'\u2014')+'</span></div><div class="rm-srow"><span class="rm-slbl">Rischio base</span><span class="rm-pill" style="background:'+LC[LV[b]][0]+';color:'+LC[LV[b]][1]+';font-size:12px;padding:3px 10px">'+LV[b]+'</span></div><div class="rm-srow"><span class="rm-slbl">RAF attivi ('+n+')</span><span style="font-size:12px;color:'+(n>0?'#A32D2D':'#999')+'">'+(ra.length?ra.map(function(r){return r.l;}).join(' \u00b7 '):'Nessuno')+'</span></div></div>'+(f>=2?'<div class="rm-alert"><strong>Rischio '+ln+':</strong> supervisione umana obbligatoria, audit indipendente e conformit\u00e0 AI Act richiesta.</div>':'');
+  q('aa').innerHTML=CATS.map(function(c){var ex=c.ex[ln],lc2=LC[ln];
+    var mits=[];
+    LV.forEach(function(lv,li){if(li<=f&&c.mit[lv]){c.mit[lv].forEach(function(m){if(mits.indexOf(m)===-1)mits.push(m);});}});return '<div class="rm-ac"><div class="rm-ach"><div><div style="font-size:14px;font-weight:500;color:#1a1a18">'+c.n+' \u00b7 '+c.label+'</div><div style="font-size:12px;color:#666;margin-top:2px">'+c.sub+'</div></div><span class="rm-pill" style="background:'+lc2[0]+';color:'+lc2[1]+';font-size:11px;padding:3px 11px;flex-shrink:0">'+ln+'</span></div><div class="rm-acb"><span class="rm-acex"><strong>Scenario a questo livello:</strong> '+ex+'</span><div style="font-size:10px;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;margin-top:6px">Mitigazioni richieste</div>'+mits.map(function(m){return '<div class="rm-ki"><div class="rm-kd" style="background:'+LB[ln]+'"></div><span>'+m+'</span></div>';}).join('')+'</div></div>';}).join('');
+  q('cfg').style.setProperty('display','none','important');
+  q('res').style.setProperty('display','block','important');
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var tool=q('rmtool');
+  tool.addEventListener('click',function(e){
+    var tab=e.target.closest('.rm-tab');
+    if(tab){var n=parseInt(tab.getAttribute('data-tab'));tool.querySelectorAll('.rm-view').forEach(function(v,i){v.classList.toggle('on',i===n);});tool.querySelectorAll('.rm-tab').forEach(function(t,i){t.classList.toggle('on',i===n);});if(n===1)bMap1();if(n===2)bMap2();if(n===3)bRS();return;}
+    var tile=e.target.closest('.rm-tile');
+    if(tile){var map=tile.getAttribute('data-map'),mapId={c:'map0',r:'map1',m:'map2'}[map],was=tile.classList.contains('open');tool.querySelectorAll('#'+mapId+' .rm-tile').forEach(function(t){t.classList.remove('open');});if(!was)tile.classList.add('open');return;}
+    var opt=e.target.closest('.rm-opt');
+    if(opt){var key=opt.getAttribute('data-key'),val=parseInt(opt.getAttribute('data-val'));S[key]=val;opt.parentElement.querySelectorAll('.rm-opt').forEach(function(o){o.classList.remove('sel');});opt.classList.add('sel');uP();return;}
+    var raft=e.target.closest('.rm-raf-tile');
+    if(raft){var idx=parseInt(raft.getAttribute('data-raf'));S.r.has(idx)?S.r.delete(idx):S.r.add(idx);raft.classList.toggle('on',S.r.has(idx));q('rc').textContent=S.r.size;uP();return;}
+    if(e.target.id==='btn-ass'){showAss();return;}
+    if(e.target.id==='btn-back'){q('cfg').style.setProperty('display','block','important');q('res').style.setProperty('display','none','important');return;}
+  });
+  bMap0();
+});
+})();
+</script>
+</body>
+</html>
