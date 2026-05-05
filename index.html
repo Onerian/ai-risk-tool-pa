@@ -194,10 +194,10 @@
     <div class="rm-tab-header">
       <span class="rm-tab-title">Amplificatori</span>
       <span class="rm-tab-sub">I fattori che aumentano l'esposizione</span>
-      <span class="rm-tab-desc">10 caratteristiche di progetto che, se presenti, incrementano il livello di rischio base. La scala del sistema, l'assenza di supervisione umana o la dipendenza tecnologica da un unico fornitore possono trasformare un rischio contenuto in uno critico.</span>
+      <span class="rm-tab-desc">Oltre al tipo di sistema e al tipo di decisione, esistono 10 caratteristiche trasversali di progetto — chiamate <strong>Fattori di Amplificazione del Rischio (RAF)</strong> — che, se presenti, aumentano il livello di rischio base. La scala del sistema, l'assenza di supervisione umana o la dipendenza da un unico fornitore esterno possono trasformare un rischio contenuto in uno critico.</span>
     </div>
     <div class="rm-grid2" id="map1"></div>
-    <div class="rm-info"><strong style="color:#1a1a18">Formula:</strong> Rischio finale = Rischio base × Amplificatori<br>0–1 RAF attivi → invariato &nbsp;·&nbsp; 2–3 RAF → +1 livello &nbsp;·&nbsp; 4+ RAF → +2 livelli</div>
+    <div class="rm-info"><strong style="color:#1a1a18">Come funziona il calcolo:</strong> il livello di rischio base dipende dal tipo di sistema e dalla natura delle decisioni. I fattori di amplificazione lo aumentano in base a quanti ne sono presenti nel progetto: con 1 fattore attivo il rischio rimane invariato; con 2 o 3 fattori sale di un livello; con 4 o più fattori sale di due livelli. Il livello massimo è Critico.</div>
   </div>
 
   <div class="rm-view" id="v2">
@@ -213,7 +213,7 @@
     <div class="rm-tab-header">
       <span class="rm-tab-title">Calcolatore</span>
       <span class="rm-tab-sub">Il profilo di rischio del tuo progetto</span>
-      <span class="rm-tab-desc">Configura il tipo di sistema, la natura delle decisioni, il livello di autonomia e i fattori di amplificazione rilevanti. Il tool restituisce un assessment personalizzato con lo scenario atteso e le misure di mitigazione per ciascuna categoria.</span>
+      <span class="rm-tab-desc">Configura il tipo di sistema, la natura delle decisioni e il livello di autonomia. Seleziona poi i Fattori di Amplificazione del Rischio (RAF) rilevanti per il tuo progetto: caratteristiche come la scala del sistema, la presenza di dati sensibili o la bassa maturità organizzativa che aumentano il livello di rischio base. Il tool restituisce un assessment personalizzato per ciascuna delle 9 categorie.</span>
     </div>
     <div id="cfg">
       <span class="rm-sl">Tipo di sistema AI</span>
@@ -239,7 +239,7 @@
         <div class="rm-opt" data-key="a" data-val="2"><div class="rm-radio"></div><div class="rm-opt-text"><span class="rm-ot">Fully autonomous</span><span class="rm-os">Nessun intervento umano routinario</span></div></div>
       </div>
       <div class="rm-sep"></div>
-      <span class="rm-sl">Fattori di amplificazione — <span id="rc">0</span>/10 attivi (selezione multipla)</span>
+      <span class="rm-sl">Fattori di Amplificazione del Rischio (RAF) — <span id="rc">0</span>/10 attivi (selezione multipla)</span>
       <div class="rm-grid2 rm-mb16" id="rg"></div>
       <div class="rm-meter-wrap">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
@@ -298,29 +298,39 @@ var RAFS=[
   {l:'Alta visibilità pubblica',s:'Il sistema interagisce direttamente con i cittadini o riguarda materie ad alta esposizione mediatica',a:['Reputazionali \u2191\u2191\u2191']}
 ];
 var S={t:null,d:null,a:null,r:new Set()};
-function gB(){var t=S.t!==null?S.t:0,d=S.d!==null?S.d:0,a=S.a!==null?S.a:0;return Math.min(Math.max(t>3?3:t>2?2:t>1?1:0,d>3?3:d>2?2:d>0?Math.max(d-1,0):0,a>1?1:0),3);}
+function gB(){
+  var t=S.t!==null?S.t:0,d=S.d!==null?S.d:0,a=S.a!==null?S.a:0;
+  var base=Math.max(t>3?3:t>2?2:t>1?1:0, d>3?3:d>2?2:d>0?Math.max(d-1,0):0);
+  if(a===2) base=Math.max(base,2);
+  return Math.min(base,3);
+}
 function gF(){var n=S.r.size;return Math.min(gB()+(n<=1?0:n<=3?1:2),3);}
 function q(id){return document.getElementById(id);}
-function buildTile(c,mapKey){
-  var isRAF=!c.risks;
+function buildRiskTile(c){
   var dot=c.dot||'#E24B4A',bg=c.bg||'#FCEBEB',tc=c.tc||'#791F1F';
-  var title=(c.n?c.n+' \u00b7 ':'')+( c.label||c.l);
-  var sub=c.sub||c.s;
-  var badge=c.badge||(c.a.length+' categorie impattate');
-  var inner='';
-  if(!isRAF){
-    inner=c.risks.map(function(r){var ls=LRISK[r.l]||['#888','#eee'];return '<div class="rm-rr"><div class="rm-rr-top"><div class="rm-rdot" style="background:'+dot+'"></div><span class="rm-rname">'+r.t+'</span><span class="rm-rlv" style="background:'+ls[1]+';color:'+ls[0]+'">'+r.l+'</span></div><span class="rm-rsimple">'+r.s+'</span><span class="rm-rpa"><strong>Perch\u00e9 \u00e8 un problema nella PA:</strong> '+r.pa+'</span></div>';}).join('');
-  } else {
-    inner=c.a.map(function(a){var p=a.lastIndexOf(' ');return '<div class="rm-ar"><span style="color:#666">'+a.substring(0,p)+'</span><span style="color:#A32D2D;font-weight:500;font-size:11px">'+a.substring(p+1)+'</span></div>';}).join('');
-  }
-  if(c.mit){
-    inner+=LV.map(function(lv){var lc=LC[lv],dc=LB[lv],mits=c.mit[lv]||[];return '<div class="rm-lev-block"><div class="rm-lev-hdr" style="background:'+lc[0]+'44"><span class="rm-lp" style="background:'+lc[0]+';color:'+lc[1]+'">'+lv+'</span><span class="rm-lex">'+(c.ex[lv]||'')+'</span></div><div class="rm-lev-body">'+mits.map(function(m){return '<div class="rm-mi"><div class="rm-md" style="background:'+dc+'"></div><span>'+m+'</span></div>';}).join('')+'</div></div>';}).join('');
-  }
-  return '<div class="rm-tile" data-map="'+mapKey+'"><div class="rm-tile-hdr"><div class="rm-dot" style="background:'+dot+'"></div><div class="rm-tile-title">'+title+'</div></div><span class="rm-tile-sub">'+sub+'</span><span class="rm-badge" style="background:'+bg+';color:'+tc+'">'+badge+'</span><div class="rm-tile-body">'+inner+'</div></div>';
+  var title=c.n+' \u00b7 '+c.label;
+  var inner=c.risks.map(function(r){
+    var ls=LRISK[r.l]||['#888','#eee'];
+    return '<div class="rm-rr"><div class="rm-rr-top"><div class="rm-rdot" style="background:'+dot+'"></div><span class="rm-rname">'+r.t+'</span><span class="rm-rlv" style="background:'+ls[1]+';color:'+ls[0]+'">'+r.l+'</span></div><span class="rm-rsimple">'+r.s+'</span><span class="rm-rpa"><strong>Perch\u00e9 \u00e8 un problema nella PA:</strong> '+r.pa+'</span></div>';
+  }).join('');
+  return '<div class="rm-tile" data-map="c"><div class="rm-tile-hdr"><div class="rm-dot" style="background:'+dot+'"></div><div class="rm-tile-title">'+title+'</div></div><span class="rm-tile-sub">'+c.sub+'</span><span class="rm-badge" style="background:'+bg+';color:'+tc+'">'+c.badge+'</span><div class="rm-tile-body">'+inner+'</div></div>';
 }
-function bMap0(){q('map0').innerHTML=CATS.map(function(c){return buildTile(c,'c');}).join('');}
-function bMap1(){if(q('map1').innerHTML)return;q('map1').innerHTML=RAFS.map(function(r){return buildTile(r,'r');}).join('');}
-function bMap2(){if(q('map2').innerHTML)return;q('map2').innerHTML=CATS.map(function(c){return buildTile(c,'m');}).join('');}
+function buildRAFTile(r){
+  var inner=r.a.map(function(a){var p=a.lastIndexOf(' ');return '<div class="rm-ar"><span style="color:#666">'+a.substring(0,p)+'</span><span style="color:#A32D2D;font-weight:500;font-size:11px">'+a.substring(p+1)+'</span></div>';}).join('');
+  return '<div class="rm-tile" data-map="r"><div class="rm-tile-hdr"><div class="rm-dot" style="background:#E24B4A"></div><div class="rm-tile-title">'+r.l+'</div></div><span class="rm-tile-sub">'+r.s+'</span><span class="rm-badge" style="background:#FCEBEB;color:#791F1F">'+r.a.length+' categorie impattate</span><div class="rm-tile-body">'+inner+'</div></div>';
+}
+function buildMitTile(c){
+  var dot=c.dot||'#E24B4A',bg=c.bg||'#FCEBEB',tc=c.tc||'#791F1F';
+  var title=c.n+' \u00b7 '+c.label;
+  var inner=LV.map(function(lv){
+    var lc=LC[lv],dc=LB[lv],mits=c.mit[lv]||[];
+    return '<div class="rm-lev-block"><div class="rm-lev-hdr" style="background:'+lc[0]+'44"><span class="rm-lp" style="background:'+lc[0]+';color:'+lc[1]+'">'+lv+'</span><span class="rm-lex">'+(c.ex[lv]||'')+'</span></div><div class="rm-lev-body">'+mits.map(function(m){return '<div class="rm-mi"><div class="rm-md" style="background:'+dc+'"></div><span>'+m+'</span></div>';}).join('')+'</div></div>';
+  }).join('');
+  return '<div class="rm-tile" data-map="m"><div class="rm-tile-hdr"><div class="rm-dot" style="background:'+dot+'"></div><div class="rm-tile-title">'+title+'</div></div><span class="rm-tile-sub">'+c.sub+'</span><span class="rm-badge" style="background:'+bg+';color:'+tc+'">4 livelli di mitigazione</span><div class="rm-tile-body">'+inner+'</div></div>';
+}
+function bMap0(){q('map0').innerHTML=CATS.map(function(c){return buildRiskTile(c);}).join('');}
+function bMap1(){if(q('map1').innerHTML)return;q('map1').innerHTML=RAFS.map(function(r){return buildRAFTile(r);}).join('');}
+function bMap2(){if(q('map2').innerHTML)return;q('map2').innerHTML=CATS.map(function(c){return buildMitTile(c);}).join('');}
 function bRS(){
   q('rg').innerHTML=RAFS.map(function(r,i){return '<div class="rm-raf-tile'+(S.r.has(i)?' on':'')+'" data-raf="'+i+'"><div class="rm-rcb"></div><div class="rm-raf-inner"><span class="rm-rtl">'+r.l+'</span><span class="rm-rsub">'+r.s+'</span></div></div>';}).join('');
 }
